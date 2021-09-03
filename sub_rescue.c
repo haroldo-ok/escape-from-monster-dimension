@@ -388,9 +388,9 @@ void handle_spawners() {
 					break;
 					
 				case 1:
-					// Spawn a pair of fishes
-					init_actor(act, 0, y, 2, 1, 128, 4);
-					init_actor(act2, -64, y, 2, 1, 128, 4);
+					// Spawn a pair of flaming skulls
+					init_actor(act, 0, y, 2, 1, 128, 3);
+					init_actor(act2, -64, y, 2, 1, 128, 3);
 					act->spd_x = level.fish_speed + boost;
 					act->group = GROUP_FISH;
 					act->score = level.fish_score;
