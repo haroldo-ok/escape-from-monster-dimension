@@ -274,6 +274,10 @@ void clear_sprites() {
 
 void interrupt_handler() {
 	static unsigned char alarm_control = 0;
+	static unsigned char scroll_x = 0;
+	
+	SMS_setBGScrollX(scroll_x);	
+	scroll_x -= 1;
 	
 	if (is_oxygen_critical() && !is_player_filling_oxygen()) {
 		if (!alarm_control) {
@@ -287,7 +291,7 @@ void interrupt_handler() {
 	}
 	
 	PSGFrame();
-	PSGSFXFrame();
+	PSGSFXFrame();	
 }
 
 void load_standard_palettes() {
