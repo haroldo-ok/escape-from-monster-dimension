@@ -550,7 +550,7 @@ void check_collisions() {
 
 void reset_actors_and_player() {
 	clear_actors();
-	init_actor(player, 116, 88, 3, 1, 2, 3);	
+	init_actor(player, 116, 88, 2, 1, 2, 4);	
 	ply_shot->active = 0;
 }
 
