@@ -855,6 +855,17 @@ void perform_level_end_sequence() {
 	PSGSFXPlay(fill_air_psg, SFX_CHANNELS2AND3);			
 }
 
+void draw_book() {
+	static char frame;
+	static char tile;
+		
+	if (!animation_delay) frame += 4;
+	if (frame > 4) frame = 0;
+	
+	tile = 160 + frame;
+	draw_meta_sprite(player->x - 16, player->y, 2, 1, tile);
+}
+
 void draw_go_up_icon() {
 	static char frame;
 	static char tile;
@@ -944,6 +955,7 @@ char gameplay_loop() {
 		
 		SMS_initSprites();	
 
+		draw_book();
 		draw_actors();		
 		draw_go_up_icon();
 
