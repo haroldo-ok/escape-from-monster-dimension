@@ -379,8 +379,8 @@ void handle_spawners() {
 				
 				switch (thing_to_spawn) {
 				case 0:
-					// Spawn a submarine
-					init_actor(act, 0, y, 3, 1, 66, 3);
+					// Spawn a death knight
+					init_actor(act, 0, y, 2, 1, 66, 3);
 					act->spd_x = level.submarine_speed + boost;
 					act->autofire = 1;
 					act->group = GROUP_ENEMY_SUB;
