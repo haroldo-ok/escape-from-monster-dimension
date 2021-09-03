@@ -1,5 +1,5 @@
-PRJNAME := sub_rescue
-OBJS := data.rel sub_rescue.rel
+PRJNAME := escape_from_monster_dimension
+OBJS := data.rel escape_from_monster_dimension.rel
 
 all: $(PRJNAME).sms
 
