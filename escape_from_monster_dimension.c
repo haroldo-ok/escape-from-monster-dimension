@@ -207,6 +207,25 @@ void fire_shot(actor *shot, actor *shooter, char speed) {
 	}
 }
 
+void fire_shot_left(actor *shot, actor *shooter, char speed) {	
+	static actor *_shot, *_shooter;
+
+	if (shot->active || level.starting) return;
+	
+	_shot = shot;
+	_shooter = shooter;
+	
+	init_actor(_shot, _shooter->x, _shooter->y, 1, 1, _shooter->base_tile + 36, 3);
+	
+	_shot->col_x = 0;
+	_shot->col_y = 8;
+	_shot->col_w = _shot->pixel_w;
+	_shot->col_h = 4;
+	
+	_shot->facing_left = 1;
+	_shot->spd_x = -speed;
+}
+
 void move_actor(actor *act) {
 	static actor *_act, *_shot;
 	
@@ -342,7 +361,8 @@ void handle_player_input() {
 			PSGPlayNoRepeat(player_shot_psg);
 		}
 	
-		fire_shot(ply_shot, player, PLAYER_SHOT_SPEED);
+		// Shoot
+		fire_shot_left(ply_shot, player, PLAYER_SHOT_SPEED);
 		
 		// Player's shot has a slightly larger collision box
 		ply_shot->col_y = 7;
@@ -373,7 +393,8 @@ void handle_spawners() {
 		act2 = act + 1;
 		if (!act->active && !act2->active) {
 			if (rand() & 3 > 1) {
-				facing_left = (rand() >> 4) & 1;
+				// Always spawn from the left
+				facing_left = 0;
 				thing_to_spawn = (rand() >> 4) % level.diver_chance ? ((rand() >> 4) & 1) : 2;
 				boost = (rand() >> 4) % level.boost_chance ? 0 : 1;
 				
@@ -1074,6 +1095,6 @@ void main() {
 }
 
 SMS_EMBED_SEGA_ROM_HEADER(9999,0); // code 9999 hopefully free, here this means 'homebrew'
-SMS_EMBED_SDSC_HEADER(0,3, 2021,5,30, "Haroldo-OK\\2021", "Sub Rescue",
-  "A subaquatic shoot-em-up.\n"
+SMS_EMBED_SDSC_HEADER(0,1, 2021,9,3, "Haroldo-OK\\2021", "Escape From Monster Dimension",
+  "Made for Mini Jame Gam #3.\n"
   "Built using devkitSMS & SMSlib - https://github.com/sverx/devkitSMS");
