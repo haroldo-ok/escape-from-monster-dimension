@@ -767,7 +767,6 @@ void perform_level_end_sequence() {
 	}
 	
 	level.ending = 0;
-	PSGSFXPlay(fill_air_psg, SFX_CHANNELS2AND3);			
 }
 
 void draw_book() {
@@ -818,7 +817,7 @@ char gameplay_loop() {
 	initialize_level();
 	
 	while(1) {	
-		if (rescue.value == RESCUE_CHARS && player->y < PLAYER_TOP + 4) {
+		if (rescue.value == RESCUE_CHARS) {
 			perform_level_end_sequence();
 			level.number++;
 			initialize_level();
