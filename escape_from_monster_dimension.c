@@ -744,10 +744,6 @@ void perform_level_end_sequence() {
 	
 	load_standard_palettes();	
 	while (rescue.value) {
-		if (player->x < 116) player->x++;
-		if (player->x > 116) player->x--;
-		if (player->y > PLAYER_TOP) player->y--;
-		
 		if (rescue.value) {
 			PSGPlayNoRepeat(level_beep_psg);
 			add_score(level.diver_score << 1);
