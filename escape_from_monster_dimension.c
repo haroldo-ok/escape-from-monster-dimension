@@ -928,6 +928,25 @@ char handle_gameover() {
 	return STATE_START;
 }
 
+char handle_title() {
+	reset_actors_and_player();
+
+	SMS_waitForVBlank();
+	SMS_displayOff();
+	SMS_disableLineInterrupt();
+	clear_sprites();
+
+	SMS_setBGScrollX(0);	
+	SMS_loadPSGaidencompressedTiles(jame_gam_tiles_psgcompr, 0);
+	SMS_loadTileMap(0, 0, jame_gam_tilemap_bin, jame_gam_tilemap_bin_size);
+	SMS_loadBGPalette(jame_gam_palette_bin);
+	
+	SMS_displayOn();
+	
+	wait_frames(90);
+	return STATE_GAMEPLAY;
+}
+
 void main() {
 	char state = STATE_START;
 	
@@ -940,7 +959,7 @@ void main() {
 		switch (state) {
 			
 		case STATE_START:
-			state = STATE_GAMEPLAY;
+			state = handle_title();
 			break;
 			
 		case STATE_GAMEPLAY:
