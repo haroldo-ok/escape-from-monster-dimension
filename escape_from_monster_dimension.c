@@ -604,7 +604,7 @@ void draw_score() {
 		
 	// Draw the digits
 	d = buffer;
-	SMS_setNextTileatXY(((32 - SCORE_DIGITS) >> 1) + 1, 1);
+	SMS_setNextTileatXY(((32 - SCORE_DIGITS) >> 1) + 1, 0);
 	for (char i = SCORE_DIGITS; i; i--, d++) {
 		SMS_setTile((*d << 1) + 237 + TILE_USE_SPRITE_PALETTE);
 	}
@@ -630,7 +630,7 @@ void draw_level_number() {
 		
 	// Draw the digits
 	d = buffer;
-	SMS_setNextTileatXY(2, 1);
+	SMS_setNextTileatXY(2, 0);
 	for (char i = LEVEL_DIGITS; i; i--, d++) {
 		SMS_setTile((*d << 1) + 237 + TILE_USE_SPRITE_PALETTE);
 	}
@@ -650,7 +650,7 @@ void add_rescue(int value) {
 void draw_rescue() {
 	static char blink_control;
 	
-	SMS_setNextTileatXY(32 - RESCUE_CHARS - 2, 2);
+	SMS_setNextTileatXY(32 - RESCUE_CHARS - 2, 1);
 	
 	int remaining = rescue.value;
 	
@@ -681,7 +681,7 @@ void add_life(int value) {
 }
 
 void draw_life() {
-	SMS_setNextTileatXY(2, 2);
+	SMS_setNextTileatXY(2, 1);
 	
 	int remaining = life.value;
 	for (char i = LIFE_CHARS; i; i--) {
@@ -717,7 +717,7 @@ void add_oxygen_non_negative(int value) {
 }
 
 void draw_oxygen() {
-	SMS_setNextTileatXY(((32 - OXYGEN_CHARS) >> 1) + 1, 2);
+	SMS_setNextTileatXY(((32 - OXYGEN_CHARS) >> 1) + 1, 1);
 	
 	int remaining = oxygen.last_shifted_value;
 	if (remaining < 0) remaining = 0;
@@ -1075,6 +1075,7 @@ void main() {
 	SMS_useFirstHalfTilesforSprites(1);
 	SMS_setSpriteMode(SPRITEMODE_TALL);
 	SMS_VDPturnOnFeature(VDPFEATURE_HIDEFIRSTCOL);
+	SMS_VDPturnOnFeature(VDPFEATURE_LOCKHSCROLL);
 	
 	while (1) {
 		switch (state) {
