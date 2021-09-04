@@ -176,7 +176,7 @@ void fire_shot(actor *shot, actor *shooter, char speed) {
 	_shot = shot;
 	_shooter = shooter;
 	
-	init_actor(_shot, _shooter->x, _shooter->y, 1, 1, _shooter->base_tile + 36, 3);
+	init_actor(_shot, _shooter->x, _shooter->y, 1, 1, _shooter->base_tile + 36, 4);
 	
 	_shot->col_x = 0;
 	_shot->col_y = 8;
@@ -695,7 +695,7 @@ void initialize_level() {
 	if (level.diver_speed > PLAYER_SPEED) level.diver_speed = PLAYER_SPEED;
 	
 	level.diver_chance = 4 + level.number * 3 / 4;	
-	level.enemy_can_fire = level.number > 1;
+	level.enemy_can_fire = 1;
 	level.show_diver_indicator = level.number < 2;
 	
 	level.boost_chance = 14 - level.number * 2 / 3;
