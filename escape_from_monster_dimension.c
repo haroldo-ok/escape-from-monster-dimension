@@ -941,9 +941,18 @@ char handle_title() {
 	SMS_loadTileMap(0, 0, jame_gam_tilemap_bin, jame_gam_tilemap_bin_size);
 	SMS_loadBGPalette(jame_gam_palette_bin);
 	
-	SMS_displayOn();
-	
+	SMS_displayOn();	
 	wait_frames(90);
+
+	SMS_displayOff();
+
+	SMS_loadPSGaidencompressedTiles(title_tiles_psgcompr, 0);
+	SMS_loadTileMap(0, 0, title_tilemap_bin, title_tilemap_bin_size);
+	SMS_loadBGPalette(title_palette_bin);
+	
+	SMS_displayOn();	
+	wait_frames(90);
+
 	return STATE_GAMEPLAY;
 }
 
