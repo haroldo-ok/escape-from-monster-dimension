@@ -794,6 +794,7 @@ char gameplay_loop() {
 
 	SMS_waitForVBlank();
 	SMS_displayOff();
+	SMS_disableLineInterrupt();
 
 	SMS_loadPSGaidencompressedTiles(sprites_tiles_psgcompr, 0);
 	SMS_loadPSGaidencompressedTiles(background_tiles_psgcompr, 256);
@@ -891,6 +892,8 @@ void print_number(char x, char y, unsigned int number, char extra_zero) {
 }
 
 char handle_gameover() {
+
+	/*
 	SMS_displayOff();
 	
 	load_standard_palettes();
@@ -900,14 +903,6 @@ char handle_gameover() {
 	SMS_loadTileMap(0, 0,background_tilemap_bin, background_tilemap_bin_size);		
 	configure_text();	
 	
-	/*
-	SMS_configureTextRenderer(352 - 32);
-	SMS_setNextTileatXY(11, 11);
-	puts('Game Over!');
-	SMS_setNextTileatXY(11, 13);
-//	printf('Score: %d0', score.value);
-	*/
-
 	// For some reason, the default text renderer is not working.
 	// TODO: Organize this mess
 	char *ch;
@@ -926,6 +921,7 @@ char handle_gameover() {
 	print_number(16, 17, level.number, 0);
 
 	SMS_displayOn();	
+	*/
 	
 	wait_frames(180);
 	
