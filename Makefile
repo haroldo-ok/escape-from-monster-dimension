@@ -1,9 +1,9 @@
-PRJNAME := sub_rescue
-OBJS := data.rel sub_rescue.rel
+PRJNAME := escape_from_monster_dimension
+OBJS := data.rel escape_from_monster_dimension.rel
 
 all: $(PRJNAME).sms
 
-data.c: data/* data/font.1bpp data/sprites_tiles.psgcompr data/background_tiles.psgcompr \
+data.c: data/* data/font.1bpp data/sprites_tiles.psgcompr data/background_tiles.psgcompr data/jame_gam_tiles.psgcompr data/title_tiles.psgcompr \
 		data/enemy_death.psg data/rescue_diver.psg data/fill_air.psg data/player_death.psg data/player_danger.psg \
 		data/level_end.psg data/level_beep.psg
 	folder2c data data
@@ -13,6 +13,12 @@ data/sprites_tiles.psgcompr: data/img/sprites.png
 
 data/background_tiles.psgcompr: data/img/background.png
 	BMP2Tile.exe data/img/background.png -palsms -fullpalette -savetiles data/background_tiles.psgcompr -savetilemap data/background_tilemap.bin -savepalette data/background_palette.bin
+
+data/jame_gam_tiles.psgcompr: data/img/jame-gam.png
+	BMP2Tile.exe data/img/jame-gam.png -palsms -fullpalette -savetiles data/jame_gam_tiles.psgcompr -savetilemap data/jame_gam_tilemap.bin -savepalette data/jame_gam_palette.bin
+
+data/title_tiles.psgcompr: data/img/title.png
+	BMP2Tile.exe data/img/title.png -palsms -fullpalette -savetiles data/title_tiles.psgcompr -savetilemap data/title_tilemap.bin -savepalette data/title_palette.bin
 	
 data/player_death.psg: data/deflemask/player_death.vgm
 	vgm2psg data/deflemask/player_death.vgm data/player_death.psg 23

@@ -1,9 +1,10 @@
-# sub-rescue
+# Escape From Monster Dimension
 
-This is a subaquatic shoot-em-up for the Sega Master System. It is heavily inspired by SeaQuest for the Atari 2600.
+8 bit shoot-em-up for the Sega Master System, made for the Mini Jame Gam #3
 
-In this game, you have to use your submarine to rescue the divers, while fighting off enemy submarines and sharks.
-
-Keep an eye on your oxygen gauge: if it depletes, you lose a life; climb your submarine all the way up in order to fill your oxygen.
-
-Once you have collected 6 divers, climb your submarine all the way up in order to go to the next level.
+* Source code forked from: https://github.com/haroldo-ok/sub-rescue
+* Book, gem and throwing axe taken from: https://opengameart.org/content/roguelikerpg-items
+* Player mage sprite taken from: https://opengameart.org/content/mr-necromancer-man-animated
+* Flaming skull monster taken from: https://opengameart.org/content/16x16-16x24-32x32-rpg-enemies-updated
+* Death knight monster plus heart and gem icons taken from: https://opengameart.org/content/simple-broad-purpose-tileset
+* Background speedlines taken from: https://www.freepik.com/free-vector/blue-background-with-linear-glowing-lines_5504100.htm#page=1&query=horizontal%20speedline&position=13

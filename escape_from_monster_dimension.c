@@ -30,12 +30,6 @@
 
 #define LEVEL_DIGITS (3)
 
-#define OXYGEN_CHARS (8)
-#define OXYGEN_RESOLUTION (4)
-#define OXYGEN_SHIFT (4)
-#define OXYGEN_MAX ((OXYGEN_CHARS * OXYGEN_RESOLUTION) << OXYGEN_SHIFT)
-#define OXYGEN_MIN (-OXYGEN_MAX / 6)
-
 #define RESCUE_CHARS (6)
 
 #define LIFE_CHARS (6)
@@ -87,13 +81,6 @@ struct life {
 	char dirty;
 } life;
 
-struct oxygen {
-	int value;
-	unsigned char last_shifted_value;
-	char dirty;	
-	char playing_sfx;
-} oxygen;
-
 struct level {
 	unsigned int number;
 	char starting;
@@ -102,7 +89,6 @@ struct level {
 	unsigned int submarine_score;
 	unsigned int fish_score;
 	unsigned int diver_score;
-	unsigned int oxygen_score;
 	
 	unsigned char submarine_speed;
 	unsigned char fish_speed;
@@ -117,9 +103,6 @@ struct level {
 void add_score(unsigned int value);
 void add_rescue(int value);
 void add_life(int value);
-
-char is_oxygen_critical();
-char is_player_filling_oxygen();
 
 void draw_meta_sprite(int x, int y, int w, int h, unsigned char tile) {
 	static char i, j;
@@ -193,7 +176,7 @@ void fire_shot(actor *shot, actor *shooter, char speed) {
 	_shot = shot;
 	_shooter = shooter;
 	
-	init_actor(_shot, _shooter->x, _shooter->y, 1, 1, _shooter->base_tile + 36, 3);
+	init_actor(_shot, _shooter->x, _shooter->y, 1, 1, _shooter->base_tile + 36, 4);
 	
 	_shot->col_x = 0;
 	_shot->col_y = 8;
@@ -205,6 +188,25 @@ void fire_shot(actor *shot, actor *shooter, char speed) {
 	if (!_shooter->facing_left) {
 		_shot->x += _shooter->pixel_w - 8;
 	}
+}
+
+void fire_shot_left(actor *shot, actor *shooter, char speed) {	
+	static actor *_shot, *_shooter;
+
+	if (shot->active || level.starting) return;
+	
+	_shot = shot;
+	_shooter = shooter;
+	
+	init_actor(_shot, _shooter->x, _shooter->y, 1, 1, _shooter->base_tile + 36, 3);
+	
+	_shot->col_x = 0;
+	_shot->col_y = 8;
+	_shot->col_w = _shot->pixel_w;
+	_shot->col_h = 4;
+	
+	_shot->facing_left = 1;
+	_shot->spd_x = -speed;
 }
 
 void move_actor(actor *act) {
@@ -273,27 +275,22 @@ void clear_sprites() {
 }
 
 void interrupt_handler() {
-	static unsigned char alarm_control = 0;
+	static unsigned char scroll_x = 0;
 	
-	if (is_oxygen_critical() && !is_player_filling_oxygen()) {
-		if (!alarm_control) {
-			PSGSFXPlay(player_danger_psg, SFX_CHANNELS2AND3);
-			alarm_control = 40;
-		} else {
-			alarm_control--;
-		}
-	} else {
-		alarm_control = 0;
-	}
+	SMS_setBGScrollX(scroll_x);	
+	scroll_x -= 1;
 	
 	PSGFrame();
-	PSGSFXFrame();
+	PSGSFXFrame();	
 }
 
 void load_standard_palettes() {
+	static unsigned char palette[16];
 	SMS_loadBGPalette(background_palette_bin);
-	SMS_loadSpritePalette(sprites_palette_bin);
-	SMS_setSpritePaletteColor(0, 0);
+	
+	memcpy(palette, sprites_palette_bin, 16);
+	palette[0] = 0;
+	SMS_loadSpritePalette(palette);
 }
 
 void load_tile_zero() {
@@ -338,7 +335,8 @@ void handle_player_input() {
 			PSGPlayNoRepeat(player_shot_psg);
 		}
 	
-		fire_shot(ply_shot, player, PLAYER_SHOT_SPEED);
+		// Shoot
+		fire_shot_left(ply_shot, player, PLAYER_SHOT_SPEED);
 		
 		// Player's shot has a slightly larger collision box
 		ply_shot->col_y = 7;
@@ -369,14 +367,15 @@ void handle_spawners() {
 		act2 = act + 1;
 		if (!act->active && !act2->active) {
 			if (rand() & 3 > 1) {
-				facing_left = (rand() >> 4) & 1;
+				// Always spawn from the left
+				facing_left = 0;
 				thing_to_spawn = (rand() >> 4) % level.diver_chance ? ((rand() >> 4) & 1) : 2;
 				boost = (rand() >> 4) % level.boost_chance ? 0 : 1;
 				
 				switch (thing_to_spawn) {
 				case 0:
-					// Spawn a submarine
-					init_actor(act, 0, y, 3, 1, 66, 3);
+					// Spawn a death knight
+					init_actor(act, 0, y, 2, 1, 66, 3);
 					act->spd_x = level.submarine_speed + boost;
 					act->autofire = 1;
 					act->group = GROUP_ENEMY_SUB;
@@ -384,9 +383,9 @@ void handle_spawners() {
 					break;
 					
 				case 1:
-					// Spawn a pair of fishes
-					init_actor(act, 0, y, 2, 1, 128, 4);
-					init_actor(act2, -64, y, 2, 1, 128, 4);
+					// Spawn a pair of flaming skulls
+					init_actor(act, 0, y, 2, 1, 128, 3);
+					init_actor(act2, -64, y, 2, 1, 128, 3);
 					act->spd_x = level.fish_speed + boost;
 					act->group = GROUP_FISH;
 					act->score = level.fish_score;
@@ -546,7 +545,7 @@ void check_collisions() {
 
 void reset_actors_and_player() {
 	clear_actors();
-	init_actor(player, 116, 88, 3, 1, 2, 3);	
+	init_actor(player, 116, 88, 2, 1, 2, 4);	
 	ply_shot->active = 0;
 }
 
@@ -579,7 +578,7 @@ void draw_score() {
 		
 	// Draw the digits
 	d = buffer;
-	SMS_setNextTileatXY(((32 - SCORE_DIGITS) >> 1) + 1, 1);
+	SMS_setNextTileatXY(((32 - SCORE_DIGITS) >> 1) + 1, 0);
 	for (char i = SCORE_DIGITS; i; i--, d++) {
 		SMS_setTile((*d << 1) + 237 + TILE_USE_SPRITE_PALETTE);
 	}
@@ -605,7 +604,7 @@ void draw_level_number() {
 		
 	// Draw the digits
 	d = buffer;
-	SMS_setNextTileatXY(2, 1);
+	SMS_setNextTileatXY(2, 0);
 	for (char i = LEVEL_DIGITS; i; i--, d++) {
 		SMS_setTile((*d << 1) + 237 + TILE_USE_SPRITE_PALETTE);
 	}
@@ -625,7 +624,7 @@ void add_rescue(int value) {
 void draw_rescue() {
 	static char blink_control;
 	
-	SMS_setNextTileatXY(32 - RESCUE_CHARS - 2, 2);
+	SMS_setNextTileatXY(32 - RESCUE_CHARS - 2, 1);
 	
 	int remaining = rescue.value;
 	
@@ -656,7 +655,7 @@ void add_life(int value) {
 }
 
 void draw_life() {
-	SMS_setNextTileatXY(2, 2);
+	SMS_setNextTileatXY(2, 1);
 	
 	int remaining = life.value;
 	for (char i = LIFE_CHARS; i; i--) {
@@ -669,83 +668,9 @@ void draw_life_if_needed() {
 	if (rescue.dirty) draw_life();
 }
 
-void set_oxygen(int value) {
-	if (value < OXYGEN_MIN) value = OXYGEN_MIN;
-	if (value > OXYGEN_MAX) value = OXYGEN_MAX;
-	
-	oxygen.value = value;
-	
-	unsigned char shifted_value = value < 0 ? 0 : value >> OXYGEN_SHIFT;
-	
-	oxygen.dirty = shifted_value != oxygen.last_shifted_value;
-	oxygen.last_shifted_value = shifted_value;
-}
-
-void add_oxygen(int value) {
-	set_oxygen(oxygen.value + value);
-}
-
-void add_oxygen_non_negative(int value) {
-	value = oxygen.value + value;
-	if (value < 0) value = 0;
-	set_oxygen(value);
-}
-
-void draw_oxygen() {
-	SMS_setNextTileatXY(((32 - OXYGEN_CHARS) >> 1) + 1, 2);
-	
-	int remaining = oxygen.last_shifted_value;
-	if (remaining < 0) remaining = 0;
-	
-	for (char i = OXYGEN_CHARS; i; i--) {
-		if (remaining > OXYGEN_RESOLUTION) {
-			SMS_setTile(127 + TILE_USE_SPRITE_PALETTE);
-			remaining -= OXYGEN_RESOLUTION;
-			if (remaining < 0) remaining = 0;
-		} else {
-			SMS_setTile(119 + (remaining << 1) + TILE_USE_SPRITE_PALETTE);
-			remaining = 0;
-		}
-	}
-}
-
-void draw_oxygen_if_needed() {
-	if (oxygen.dirty) draw_oxygen();
-}
-
-char is_oxygen_critical() {
-	return !level.starting && oxygen.value < OXYGEN_MAX >> 2;
-}
-
-char is_player_filling_oxygen() {
-	return player->y < PLAYER_TOP + 4;
-}
-
 void handle_oxygen() {
 	if (level.starting) {			
-		add_oxygen(5);
-		level.starting = oxygen.value < OXYGEN_MAX;
-	} else {
-		if (is_player_filling_oxygen()) {
-			add_oxygen(6);
-		} else {
-			add_oxygen(-1);
-			if (oxygen.value <= OXYGEN_MIN) player->active = 0;
-		}
-	}
-
-	if (!level.ending) {		
-		if (level.starting || is_player_filling_oxygen()) {
-			if (!oxygen.playing_sfx) {
-				oxygen.playing_sfx = 1;
-				PSGSFXPlay(fill_air_psg, SFX_CHANNELS2AND3);			
-			}
-		} else {
-			if (oxygen.playing_sfx) {
-				oxygen.playing_sfx = 0;
-				PSGSFXStop();
-			}
-		}
+		level.starting = 0;
 	}
 }
 
@@ -755,13 +680,11 @@ void initialize_level() {
 	
 	clear_actors();
 	ply_shot->active = 0;
-	set_oxygen(0);
 	set_rescue(0);
 	
 	level.fish_score = 1 + level.number / 3;
 	level.submarine_score = level.fish_score << 1;
 	level.diver_score = level.fish_score + level.submarine_score;
-	level.oxygen_score = 1 + level.number / 4;
 	
 	level.fish_speed = 1 + level.number / 3;
 	level.submarine_speed = 1 + level.number / 5;
@@ -772,7 +695,7 @@ void initialize_level() {
 	if (level.diver_speed > PLAYER_SPEED) level.diver_speed = PLAYER_SPEED;
 	
 	level.diver_chance = 4 + level.number * 3 / 4;	
-	level.enemy_can_fire = level.number > 1;
+	level.enemy_can_fire = 1;
 	level.show_diver_indicator = level.number < 2;
 	
 	level.boost_chance = 14 - level.number * 2 / 3;
@@ -820,15 +743,8 @@ void perform_level_end_sequence() {
 	PSGPlayNoRepeat(level_end_psg);
 	
 	load_standard_palettes();	
-	while (oxygen.value || rescue.value) {
-		if (player->x < 116) player->x++;
-		if (player->x > 116) player->x--;
-		if (player->y > PLAYER_TOP) player->y--;
-		
-		if (oxygen.value) {
-			add_score(level.oxygen_score);
-			add_oxygen_non_negative(-4);
-		} else if (rescue.value) {
+	while (rescue.value) {
+		if (rescue.value) {
 			PSGPlayNoRepeat(level_beep_psg);
 			add_score(level.diver_score << 1);
 			add_rescue(-1);
@@ -844,27 +760,20 @@ void perform_level_end_sequence() {
 		
 		draw_score_if_needed();
 		draw_rescue_if_needed();
-		draw_oxygen_if_needed();
 	}
 	
 	level.ending = 0;
-	PSGSFXPlay(fill_air_psg, SFX_CHANNELS2AND3);			
 }
 
-void draw_go_up_icon() {
+void draw_book() {
 	static char frame;
 	static char tile;
-	
-	// Only show the icons if oxygen is critical, or if all divers are rescued.
-	if (rescue.value != RESCUE_CHARS && !is_oxygen_critical()) return;
 		
 	if (!animation_delay) frame += 4;
 	if (frame > 4) frame = 0;
 	
-	tile = 224 + frame;
-	draw_meta_sprite(48, 24, 2, 1, tile);
-	draw_meta_sprite(124, 24, 2, 1, tile);
-	draw_meta_sprite(SCREEN_W - 48 - 8, 24, 2, 1, tile);
+	tile = 160 + frame;
+	draw_meta_sprite(player->x - 16, player->y, 2, 1, tile);
 }
 
 char gameplay_loop() {
@@ -877,9 +786,6 @@ char gameplay_loop() {
 	set_score(0);
 	set_rescue(0);
 	set_life(4);
-	set_oxygen(0);	
-	oxygen.dirty = 1;
-	oxygen.playing_sfx = 0;
 	
 	level.number = 1;
 	level.starting = 1;
@@ -888,6 +794,7 @@ char gameplay_loop() {
 
 	SMS_waitForVBlank();
 	SMS_displayOff();
+	SMS_disableLineInterrupt();
 
 	SMS_loadPSGaidencompressedTiles(sprites_tiles_psgcompr, 0);
 	SMS_loadPSGaidencompressedTiles(background_tiles_psgcompr, 256);
@@ -907,7 +814,7 @@ char gameplay_loop() {
 	initialize_level();
 	
 	while(1) {	
-		if (rescue.value == RESCUE_CHARS && player->y < PLAYER_TOP + 4) {
+		if (rescue.value == RESCUE_CHARS) {
 			perform_level_end_sequence();
 			level.number++;
 			initialize_level();
@@ -917,7 +824,6 @@ char gameplay_loop() {
 		if (!player->active) {
 			add_life(-1);
 			reset_actors_and_player();
-			set_oxygen(0);
 			level.starting = 1;
 		}
 		
@@ -940,25 +846,20 @@ char gameplay_loop() {
 		
 		SMS_initSprites();	
 
+		draw_book();
 		draw_actors();		
-		draw_go_up_icon();
 
 		SMS_finalizeSprites();		
 
 		SMS_waitForVBlank();
 		SMS_copySpritestoSAT();
 
-		if (is_oxygen_critical()) {
-			flash_player_red(16);
-		} else {
-			load_standard_palettes();
-		}
+		load_standard_palettes();
 		
 		draw_level_number();
 		draw_score_if_needed();
 		draw_rescue_if_needed();
 		draw_life_if_needed();
-		draw_oxygen_if_needed();
 				
 		frame += 6;
 		if (frame > 12) frame = 0;
@@ -991,6 +892,8 @@ void print_number(char x, char y, unsigned int number, char extra_zero) {
 }
 
 char handle_gameover() {
+
+	/*
 	SMS_displayOff();
 	
 	load_standard_palettes();
@@ -1000,14 +903,6 @@ char handle_gameover() {
 	SMS_loadTileMap(0, 0,background_tilemap_bin, background_tilemap_bin_size);		
 	configure_text();	
 	
-	/*
-	SMS_configureTextRenderer(352 - 32);
-	SMS_setNextTileatXY(11, 11);
-	puts('Game Over!');
-	SMS_setNextTileatXY(11, 13);
-//	printf('Score: %d0', score.value);
-	*/
-
 	// For some reason, the default text renderer is not working.
 	// TODO: Organize this mess
 	char *ch;
@@ -1026,10 +921,39 @@ char handle_gameover() {
 	print_number(16, 17, level.number, 0);
 
 	SMS_displayOn();	
+	*/
 	
 	wait_frames(180);
 	
 	return STATE_START;
+}
+
+char handle_title() {
+	reset_actors_and_player();
+
+	SMS_waitForVBlank();
+	SMS_displayOff();
+	SMS_disableLineInterrupt();
+	clear_sprites();
+
+	SMS_setBGScrollX(0);	
+	SMS_loadPSGaidencompressedTiles(jame_gam_tiles_psgcompr, 0);
+	SMS_loadTileMap(0, 0, jame_gam_tilemap_bin, jame_gam_tilemap_bin_size);
+	SMS_loadBGPalette(jame_gam_palette_bin);
+	
+	SMS_displayOn();	
+	wait_frames(90);
+
+	SMS_displayOff();
+
+	SMS_loadPSGaidencompressedTiles(title_tiles_psgcompr, 0);
+	SMS_loadTileMap(0, 0, title_tilemap_bin, title_tilemap_bin_size);
+	SMS_loadBGPalette(title_palette_bin);
+	
+	SMS_displayOn();	
+	wait_frames(90);
+
+	return STATE_GAMEPLAY;
 }
 
 void main() {
@@ -1038,12 +962,13 @@ void main() {
 	SMS_useFirstHalfTilesforSprites(1);
 	SMS_setSpriteMode(SPRITEMODE_TALL);
 	SMS_VDPturnOnFeature(VDPFEATURE_HIDEFIRSTCOL);
+	SMS_VDPturnOnFeature(VDPFEATURE_LOCKHSCROLL);
 	
 	while (1) {
 		switch (state) {
 			
 		case STATE_START:
-			state = STATE_GAMEPLAY;
+			state = handle_title();
 			break;
 			
 		case STATE_GAMEPLAY:
@@ -1058,6 +983,6 @@ void main() {
 }
 
 SMS_EMBED_SEGA_ROM_HEADER(9999,0); // code 9999 hopefully free, here this means 'homebrew'
-SMS_EMBED_SDSC_HEADER(0,3, 2021,5,30, "Haroldo-OK\\2021", "Sub Rescue",
-  "A subaquatic shoot-em-up.\n"
+SMS_EMBED_SDSC_HEADER(0,1, 2021,9,3, "Haroldo-OK\\2021", "Escape From Monster Dimension",
+  "Made for Mini Jame Gam #3.\n"
   "Built using devkitSMS & SMSlib - https://github.com/sverx/devkitSMS");
